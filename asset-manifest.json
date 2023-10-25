@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/MarioRZ665/my-app/static/css/main.073c9b0a.css",
+    "main.js": "/MarioRZ665/my-app/static/js/main.e79bbdd7.js",
+    "static/js/787.28cb0dcd.chunk.js": "/MarioRZ665/my-app/static/js/787.28cb0dcd.chunk.js",
+    "static/media/logo.svg": "/MarioRZ665/my-app/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "index.html": "/MarioRZ665/my-app/index.html",
+    "main.073c9b0a.css.map": "/MarioRZ665/my-app/static/css/main.073c9b0a.css.map",
+    "main.e79bbdd7.js.map": "/MarioRZ665/my-app/static/js/main.e79bbdd7.js.map",
+    "787.28cb0dcd.chunk.js.map": "/MarioRZ665/my-app/static/js/787.28cb0dcd.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.073c9b0a.css",
+    "static/js/main.e79bbdd7.js"
+  ]
+}
