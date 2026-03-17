@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function LoanSimulationPage() {
   const [formData, setFormData] = useState({
@@ -15,9 +15,9 @@ export default function LoanSimulationPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  console.log(apiUrl);
   const [simulations, setSimulations] = useState<any[]>([]);
   const [loadingSimulations, setLoadingSimulations] = useState(true);
+  const [selectedSimulation, setSelectedSimulation] = useState<any>(null);
 
   const fetchSimulations = async () => {
     setLoadingSimulations(true);
@@ -42,6 +42,7 @@ export default function LoanSimulationPage() {
     } catch (err) {
       console.error("Error al obtener historial:", err);
     } finally {
+
       setLoadingSimulations(false);
     }
   };
@@ -85,7 +86,6 @@ export default function LoanSimulationPage() {
       });
 
       const data = await response.json().catch(() => null);
-
       if (!response.ok) {
         throw new Error(data?.message || `Error ${response.status}: Error al procesar la simulación.`);
       }
@@ -97,12 +97,13 @@ export default function LoanSimulationPage() {
     } catch (err: any) {
       setError(err.message || "Ocurrió un error");
     } finally {
+      e.preventDefault();
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 p-6 font-sans">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-200 bg-white dark:bg-black p-6 font-sans">
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-8">
 
         {/* Form Container */}
@@ -234,9 +235,41 @@ export default function LoanSimulationPage() {
 
           {result && (
             <div className="mt-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-inner overflow-hidden">
-              <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Último Resultado</p>
-              <pre className="text-[11px] text-slate-600 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap max-h-32">
-              </pre>
+              <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mb-3">Última Simulación</p>
+
+              {result.details && result.details.length > 0 ? (
+                <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/50">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                        <th className="px-2 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">#</th>
+                        <th className="px-2 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Cuota</th>
+                        <th className="px-2 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Capital</th>
+                        <th className="px-2 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Interés</th>
+                        <th className="px-2 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Saldo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                      {result.details.map((detail: any) => (
+                        <tr key={detail.id || detail.installment_number} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-2 py-1.5 font-medium text-slate-900 dark:text-slate-200">{detail.installment_number}</td>
+                          <td className="px-2 py-1.5 text-slate-600 dark:text-slate-300">${Number(detail.payment).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-2 py-1.5 text-slate-600 dark:text-slate-300">${Number(detail.principal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-2 py-1.5 text-slate-600 dark:text-slate-300">${Number(detail.interest).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-2 py-1.5 text-slate-600 dark:text-slate-300">${Number(detail.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-600 dark:text-slate-400">
+                  <span className="font-semibold block mb-1">Resumen:</span>
+                  Monto: ${Number(result.amount).toLocaleString()} <br />
+                  Pago Mensual: ${Number(result.monthly_payment || result.payment || 0).toLocaleString()} <br />
+                  Plazo: {result.term_months} meses a {result.interest_rate}%
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -288,30 +321,70 @@ export default function LoanSimulationPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {simulations.map((sim, i) => (
-                    <tr key={sim.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-3.5 font-medium text-slate-900 dark:text-slate-200">
-                        ${Number(sim.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
-                        {sim.interest_rate}%
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 text-center sm:text-left">
-                        {sim.term_months} meses
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
-                        ${Number(sim.total_payment).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400 text-right whitespace-nowrap text-xs">
-                        {sim.start_date}
-                      </td>
-                    </tr>
+                    <React.Fragment key={sim.id || i}>
+                      <tr
+                        onClick={() => setSelectedSimulation(selectedSimulation?.id === sim.id ? null : sim)}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group"
+                      >
+                        <td className="px-4 py-3.5 font-medium text-slate-900 dark:text-slate-200">
+                          ${Number(sim.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                          {sim.interest_rate}%
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 text-center sm:text-left">
+                          {sim.term_months} meses
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                          ${Number(sim.monthly_payment || sim.payment || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400 text-right whitespace-nowrap text-xs flex items-center justify-end gap-2">
+                          {new Date(sim.created_at).toLocaleString('es-ES')}
+                          <svg className={`w-4 h-4 transition-transform ${selectedSimulation?.id === sim.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </td>
+                      </tr>
+                      {selectedSimulation?.id === sim.id && sim.details && (
+                        <tr>
+                          <td colSpan={5} className="p-0 border-b border-slate-200 dark:border-slate-700">
+                            <div className="bg-slate-50 dark:bg-slate-800/80 p-4 border-t border-slate-100 dark:border-slate-700/50">
+                              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">Tabla de Amortización</h4>
+                              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/50">
+                                <table className="w-full text-left border-collapse text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                                      <th className="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">#</th>
+                                      <th className="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Cuota</th>
+                                      <th className="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Capital</th>
+                                      <th className="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Interés</th>
+                                      <th className="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">Saldo</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                    {sim.details.map((detail: any) => (
+                                      <tr key={detail.id || detail.installment_number} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-200">{detail.installment_number}</td>
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">${Number(detail.payment).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">${Number(detail.principal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">${Number(detail.interest).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">${Number(detail.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
