@@ -10,25 +10,25 @@ export default function LoanSimulationPage() {
     term_months: "",
     start_date: "",
   });
-  
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
+  console.log(apiUrl);
   const [simulations, setSimulations] = useState<any[]>([]);
   const [loadingSimulations, setLoadingSimulations] = useState(true);
 
   const fetchSimulations = async () => {
     setLoadingSimulations(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/simulations", {
+      const response = await fetch(`${apiUrl}/api/simulations`, {
         headers: {
           Accept: "application/json",
         },
       });
       const data = await response.json().catch(() => null);
       if (response.ok) {
-        // Handle common Laravel/API pagination architectures or direct array
         if (Array.isArray(data)) {
           setSimulations(data);
         } else if (data && Array.isArray(data.data)) {
@@ -56,7 +56,6 @@ export default function LoanSimulationPage() {
       let parsedValue: string | number = value;
 
       if (name !== "start_date") {
-        // Remover ceros a la izquierda (pero preservar '0.' para decimales)
         if (value.startsWith('0') && value.length > 1 && !value.includes('.')) {
           parsedValue = value.replace(/^0+/, '');
         }
@@ -76,7 +75,7 @@ export default function LoanSimulationPage() {
     setResult(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/simulations", {
+      const response = await fetch(`${apiUrl}/api/simulations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +91,7 @@ export default function LoanSimulationPage() {
       }
 
       setResult(data || { success: true, message: "Simulación creada exitosamente" });
-      
+
       // Refresh the table
       fetchSimulations();
     } catch (err: any) {
@@ -105,7 +104,7 @@ export default function LoanSimulationPage() {
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 p-6 font-sans">
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-8">
-        
+
         {/* Form Container */}
         <div className="lg:col-span-5 bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 dark:border-slate-800/50 p-8 transition-all h-fit">
           <div className="mb-6">
@@ -221,7 +220,7 @@ export default function LoanSimulationPage() {
                     Procesando...
                   </>
                 ) : (
-                  "Ejecutar Simulación"
+                  "Enviar solicitud"
                 )}
               </span>
             </button>
@@ -237,7 +236,6 @@ export default function LoanSimulationPage() {
             <div className="mt-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-inner overflow-hidden">
               <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Último Resultado</p>
               <pre className="text-[11px] text-slate-600 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap max-h-32">
-                {JSON.stringify(result, null, 2)}
               </pre>
             </div>
           )}
@@ -250,7 +248,7 @@ export default function LoanSimulationPage() {
               <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Historial de Simulaciones</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Simulaciones registradas previamente.</p>
             </div>
-            <button 
+            <button
               onClick={fetchSimulations}
               className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full transition-colors"
               title="Actualizar registros"
